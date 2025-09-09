@@ -1,0 +1,94 @@
+const ytdl = require("@distube/ytdl-core");
+const Video = require("../../models/video.model");
+const Question = require("../../models/question.model");
+
+exports.saveYouTubeVideo = async (req, res) => {
+  try {
+    const { videoUrl } = req.body;
+    if (!videoUrl) {
+      return res.status(400).json({ status: false, message: "videoUrl is required" });
+    }
+    const info = await ytdl.getInfo(videoUrl);
+    const metadata = {
+      videoId: info.videoDetails.videoId,
+      title: info.videoDetails.title,
+      description: info.videoDetails.description,
+      thumbnail: info.videoDetails.thumbnails[0].url,
+      uploadedBy: req.user._id,
+      userEmail: req.user.email,
+      username: req.user.username,
+    };
+    const videoDoc = new Video(metadata);
+    await videoDoc.save();
+    res.json({ status: true, data: videoDoc });
+  } catch (e) {
+    res.status(400).json({ status: false, message: e.message });
+  }
+};
+
+exports.deleteQuestionAndVideo = async (req, res) => {
+  try {
+    const questionId = req.params.id;
+
+    const question = await Question.findById(questionId);
+
+    if (!question) {
+      return res.status(404).json({
+        status: false,
+        message: "Question not found",
+      });
+    }
+
+    await Question.deleteMany({ _id:questionId });
+    await Video.deleteOne({ videoId: question.videoId });
+    res.json({
+      status: true,
+      message: "Question and video metadata deleted successfully",
+      data: true
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: "Error deleting question and video metadata",
+      error: err.message
+    });
+  }
+};
+
+exports.getVideoByIdAndMeta = async (req, res) => {
+  try {
+    const questionId = req.params.id;
+
+    // Find the question first
+    const question = await Question.findById(questionId);
+    if (!question) {
+      return res.status(404).json({
+        status: false,
+        message: "Question not found",
+      });
+    }
+
+    const videoMeta = await Video.findOne({ videoId: question.videoId });
+    if (!videoMeta) {
+      return res.status(404).json({
+        status: false,
+        message: "Video not found",
+      });
+    }
+
+    res.json({
+      status: true,
+      data: {
+        videoId: question.videoId,
+        questions: question.questions,
+        meta: videoMeta
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: "Error fetching video data",
+      error: err.message
+    });
+  }
+};
