@@ -11,19 +11,18 @@ class QuestionService {
         {
           $setOnInsert: { videoId, videoUrl, createdBy, questions: [] },
         },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
+        { upsert: true, new: true, setDefaultsOnInsert: true },
       );
-      
+
       if (!questions) {
         return videoDocument;
       }
-      
 
       const incomingTimeSet = new Set();
       for (const q of questions) {
         if (incomingTimeSet.has(q.time)) {
           throw new Error(
-            `Duplicate timestamp ${q.time} found in your request. Each question must have a unique timestamp.`
+            `Duplicate timestamp ${q.time} found in your request. Each question must have a unique timestamp.`,
           );
         }
         incomingTimeSet.add(q.time);
@@ -146,27 +145,36 @@ class QuestionService {
       throw err;
     }
   }
-
-  async upsertAnswer({ questionId, videoId, answer }) {
+  async updateQuestionDetails({ videoId, questionId, title, options, answer }, user) {
+    console.log('[DEBUG] updateQuestionDetails called with:', { videoId, questionId, title, options, answer });
     try {
-      const questionDoc = await Question.findById(videoId);
+      // Find the video document belonging to the user
+      const video = await Question.findOne({ _id: videoId, createdBy: user._id });
+      console.log('[DEBUG] Video lookup result:', video ? 'Found' : 'NOT FOUND');
 
-      if (!questionDoc) {
-        throw new Error("Video not found");
+      if (!video) {
+        console.error('[DEBUG] Video not found or access denied for ID:', videoId);
+        throw new Error("Video not found or access denied");
       }
 
-      const questionIndex = questionDoc.questions.findIndex(
-        (q) => q._id.toString() === questionId
-      );
+      const questionIndex = video.questions.findIndex(q => q._id.toString() === questionId);
+      console.log('[DEBUG] Question index in array:', questionIndex);
 
       if (questionIndex === -1) {
-        throw new Error("Question not found within the video");
+        console.error('[DEBUG] Question ID not found in video questions array:', questionId);
+        throw new Error("Question not found");
       }
 
-      questionDoc.questions[questionIndex].answer = answer[0].answer;
-      await questionDoc.save();
-      return questionDoc.questions[questionIndex];
+      console.log('[DEBUG] Updating question details at index:', questionIndex);
+      if (title !== undefined) video.questions[questionIndex].title = title;
+      if (options !== undefined) video.questions[questionIndex].options = options;
+      if (answer !== undefined) video.questions[questionIndex].answer = answer;
+
+      const updatedVideo = await video.save();
+      console.log('[DEBUG] Video saved successfully.');
+      return updatedVideo.questions[questionIndex];
     } catch (err) {
+      console.error('[DEBUG] Error in updateQuestionDetails service:', err.message);
       throw err;
     }
   }

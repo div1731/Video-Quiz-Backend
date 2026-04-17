@@ -158,7 +158,7 @@ class QuestionController {
         return createError(res, {}, { message: 'id, videoId, and answer are required' });
       }
       
-      const data = await questionServices.upsertAnswer({ questionId, videoId, answer });
+      const data = await userAnswerServices.saveUserResponse({ questionId, videoId, answer }, user);
       if (data) {
         createResponse(res, true, 'Answer saved successfully', data);
       } else {
@@ -212,6 +212,27 @@ class QuestionController {
       }
     } catch (e) {
       console.error('Error in clearQuestionsAtTime:', e.message);
+      createError(res, e);
+    }
+  }
+
+  async updateQuestionDetails(req, res) {
+    try {
+      const { videoId, questionId, title, options, answer } = req.body;
+      const { user } = req;
+      
+      if (!videoId || !questionId) {
+        return createError(res, {}, { message: 'videoId and questionId are required' });
+      }
+      
+      const data = await questionServices.updateQuestionDetails({ videoId, questionId, title, options, answer }, user);
+      if (data) {
+        createResponse(res, true, 'Question details updated successfully', data);
+      } else {
+        createError(res, {}, { message: 'Failed to update question details' });
+      }
+    } catch (e) {
+      console.error('Error in updateQuestionDetails:', e.message);
       createError(res, e);
     }
   }

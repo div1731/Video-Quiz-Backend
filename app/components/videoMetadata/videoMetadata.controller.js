@@ -4,20 +4,38 @@ const Question = require("../../models/question.model");
 
 exports.saveYouTubeVideo = async (req, res) => {
   try {
-    const { videoUrl } = req.body;
+    const { videoUrl, title, description, thumbnail } = req.body;
     if (!videoUrl) {
       return res.status(400).json({ status: false, message: "videoUrl is required" });
     }
-    const info = await ytdl.getInfo(videoUrl);
-    const metadata = {
-      videoId: info.videoDetails.videoId,
-      title: info.videoDetails.title,
-      description: info.videoDetails.description,
-      thumbnail: info.videoDetails.thumbnails[0].url,
-      uploadedBy: req.user._id,
-      userEmail: req.user.email,
-      username: req.user.username,
-    };
+
+    let metadata;
+
+    if (title && description && thumbnail) {
+      console.log('Using provided metadata for video:', videoUrl);
+      metadata = {
+        videoId: req.body.videoId || videoUrl.split('v=')[1]?.split('&')[0] || videoUrl.split('/').pop(),
+        title,
+        description,
+        thumbnail,
+        uploadedBy: req.user._id,
+        userEmail: req.user.email,
+        username: req.user.username,
+      };
+    } else {
+      console.log('Fetching metadata using ytdl for video:', videoUrl);
+      const info = await ytdl.getInfo(videoUrl);
+      metadata = {
+        videoId: info.videoDetails.videoId,
+        title: info.videoDetails.title,
+        description: info.videoDetails.description,
+        thumbnail: info.videoDetails.thumbnails[0].url,
+        uploadedBy: req.user._id,
+        userEmail: req.user.email,
+        username: req.user.username,
+      };
+    }
+
     const videoDoc = new Video(metadata);
     await videoDoc.save();
     res.json({ status: true, data: videoDoc });

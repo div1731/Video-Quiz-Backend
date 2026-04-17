@@ -90,4 +90,14 @@ router.put(
   (req, res) => questionController.updateUserAnswer(req, res)
 );
 
+router.put(
+  "/updateDetails",
+  [
+    passport.authenticate("jwt", { session: false, failWithError: true }),
+    PassportErrorHandler.success,
+    PassportErrorHandler.error,
+  ],
+  (req, res) => questionController.updateQuestionDetails(req, res)
+);
+
 module.exports = router;

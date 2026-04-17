@@ -1,25 +1,29 @@
 const Auth = require("../models/auth.model");
 
 class AuthService {
-  async addNewUser(obj) {
-    try {
-      obj.email = String(obj.email).toLowerCase();
-
-      const existingUser = await Auth.findOne({
-        $or: [{ email: obj.email }],
-      }).maxTimeMS(10000);
-
-      if (existingUser) {
-        throw { message: "That email is already in use." };
-      }
-
-      const auth = new Auth({ ...obj });
-      const item = await auth.save();
-      return item.toJSON();
-    } catch (e) {
-      throw e;
+async addNewUser(obj) {
+  try {
+    if (!obj.email) {
+      throw new Error("Email is required");
     }
+
+    obj.email = String(obj.email).toLowerCase();
+    console.log("Email type:", typeof obj.email, obj.email);
+
+    const existingUser = await Auth.findOne({ email: obj.email });
+
+    if (existingUser) {
+      throw new Error("That email is already in use.");
+    }
+
+    const auth = new Auth({ ...obj });
+    const item = await auth.save();
+
+    return item.toJSON();
+  } catch (e) {
+    throw e;
   }
+}
 
   async UserLogin(payload) {
     try {
