@@ -54,6 +54,36 @@ class QuestionService {
     }
   }
 
+  async getAllUserVideos(user) {
+    try {
+      // Fetch videos that the logged-in user has participated in (answered questions for)
+      const { _id } = user;
+      
+      // 1. Find all user answers for this user
+      const userAnswers = await UserAnswer.find({ userId: _id });
+      
+      // 2. Extract unique question IDs
+      const mongoose = require('mongoose');
+      const questionIds = [...new Set(userAnswers.map(ua => ua.questionId.toString()))]
+        .map(id => new mongoose.Types.ObjectId(id));
+      
+      // 3. Find the videos corresponding to those IDs
+      return await Question.aggregate([
+        { $match: { _id: { $in: questionIds } } },
+        {
+          $lookup: {
+            from: "useranswers",
+            localField: "_id",
+            foreignField: "questionId",
+            as: "userAnswers",
+          },
+        },
+      ]);
+    } catch (err) {
+      throw err;
+    }
+  }
+
   async getVideoByUrl(payload, user) {
     try {
       const { videoId } = payload;

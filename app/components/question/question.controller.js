@@ -55,6 +55,21 @@ class QuestionController {
     }
   }
 
+  async getAllUserVideos(req, res) {
+    try {
+      const { user } = req;
+      const data = await questionServices.getAllUserVideos(user);
+      if (data) {
+        createResponse(res, true, 'All user videos retrieved successfully', data);
+      } else {
+        createError(res, {}, { message: 'Failed to retrieve user videos. Please try again' });
+      }
+    } catch (e) {
+      console.error('Error in getAllUserVideos:', e.message);
+      createError(res, e);
+    }
+  }
+
   async getVideoByUrl(req, res) {
     try {
       const { query, user } = req;

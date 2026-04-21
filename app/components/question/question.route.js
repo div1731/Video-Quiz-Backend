@@ -28,6 +28,18 @@ router.get(
 );
 
 router.get(
+  "/all",
+  [
+    passport.authenticate("jwt", { session: false, failWithError: true }),
+    PassportErrorHandler.success,
+    PassportErrorHandler.error,
+  ],
+  (req, res) => {
+    questionController.getAllUserVideos(req, res);
+  }
+);
+
+router.get(
   "/getVideoByUrl",
   [
     passport.authenticate("jwt", { session: false, failWithError: true }),
