@@ -10,6 +10,15 @@ const schema = mongoose.Schema(
     videoId: {
       type: String,
     },
+    videoUrl: {
+      type: String,
+    },
+    title: {
+      type: String,
+    },
+    thumbnail: {
+      type: String,
+    },
     questions: [
       {
         type: {
@@ -31,7 +40,7 @@ const schema = mongoose.Schema(
       },
     ],
   },
-  { timestamps: true, usePushEach: true } // UTC format
+  { timestamps: true, usePushEach: true }
 );
 
 module.exports = mongoose.model("Question", schema);
