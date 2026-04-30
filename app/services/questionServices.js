@@ -7,14 +7,46 @@ class QuestionService {
       const { videoId, videoUrl, title, thumbnail, questions } = payload;
       const createdBy = user._id;
       
-      let videoDocument = await Question.findOneAndUpdate(
-        { videoId, createdBy },
-        {
-          $set: { videoUrl, title, thumbnail },
-          $setOnInsert: { questions: [] },
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true },
-      );
+      let videoDocument = await Question.findOne({ videoId, createdBy });
+
+      if (!videoDocument) {
+        // If not found, create it. Try to get title/thumbnail from Video model if not in payload
+        let finalTitle = title;
+        let finalThumbnail = thumbnail;
+
+        if (!finalTitle || !finalThumbnail) {
+          const Video = require("../models/video.model");
+          const videoMeta = await Video.findOne({ videoId });
+          if (videoMeta) {
+            finalTitle = finalTitle || videoMeta.title;
+            finalThumbnail = finalThumbnail || videoMeta.thumbnail;
+          }
+        }
+
+        videoDocument = new Question({
+          videoId,
+          createdBy,
+          videoUrl,
+          title: finalTitle,
+          thumbnail: finalThumbnail,
+          questions: questions || []
+        });
+      } else {
+        // If exists, update metadata if provided
+        if (videoUrl) videoDocument.videoUrl = videoUrl;
+        if (title) videoDocument.title = title;
+        if (thumbnail) videoDocument.thumbnail = thumbnail;
+        
+        // If title/thumbnail still missing, try to fill from Video model
+        if (!videoDocument.title || !videoDocument.thumbnail) {
+          const Video = require("../models/video.model");
+          const videoMeta = await Video.findOne({ videoId });
+          if (videoMeta) {
+            videoDocument.title = videoDocument.title || videoMeta.title;
+            videoDocument.thumbnail = videoDocument.thumbnail || videoMeta.thumbnail;
+          }
+        }
+      }
 
       if (!questions) {
         return videoDocument;
@@ -44,12 +76,64 @@ class QuestionService {
         { $match: { createdBy: _id } },
         {
           $lookup: {
+            from: "videos",
+            localField: "videoId",
+            foreignField: "videoId",
+            as: "videoMeta"
+          }
+        },
+        {
+          $unwind: {
+            path: "$videoMeta",
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $lookup: {
             from: "useranswers",
-            localField: "_id",
-            foreignField: "questionId",
+            let: { 
+              vId: { $toString: "$_id" },
+              qIds: { $map: { input: { $ifNull: ["$questions._id", []] }, as: "qid", in: { $toString: "$$qid" } } }
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $or: [
+                      { $eq: ["$videoId", "$$vId"] },
+                      { $in: [{ $toString: "$questionId" }, "$$qIds"] }
+                    ]
+                  }
+                }
+              }
+            ],
             as: "userAnswers",
           },
         },
+        {
+          $project: {
+            videoId: 1,
+            videoUrl: 1,
+            title: { 
+              $cond: {
+                if: { $or: [{ $eq: ["$title", null] }, { $eq: ["$title", ""] }] },
+                then: { $ifNull: ["$videoMeta.title", "Untitled Video"] },
+                else: "$title"
+              }
+            },
+            thumbnail: { 
+              $cond: {
+                if: { $or: [{ $eq: ["$thumbnail", null] }, { $eq: ["$thumbnail", ""] }] },
+                then: { $ifNull: ["$videoMeta.thumbnail", null] },
+                else: "$thumbnail"
+              }
+            },
+            questions: 1,
+            userAnswers: 1,
+            createdAt: 1,
+            updatedAt: 1
+          }
+        }
       ]);
     } catch (err) {
       throw err;
@@ -68,12 +152,44 @@ class QuestionService {
         { $match: { _id: { $in: questionIds } } },
         {
           $lookup: {
+            from: "videos",
+            localField: "videoId",
+            foreignField: "videoId",
+            as: "videoMeta"
+          }
+        },
+        {
+          $unwind: {
+            path: "$videoMeta",
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $lookup: {
             from: "useranswers",
             localField: "_id",
             foreignField: "questionId",
             as: "userAnswers",
           },
         },
+        {
+          $addFields: {
+            title: { 
+              $cond: {
+                if: { $or: [{ $eq: ["$title", null] }, { $eq: ["$title", ""] }] },
+                then: { $ifNull: ["$videoMeta.title", "Untitled Video"] },
+                else: "$title"
+              }
+            },
+            thumbnail: { 
+              $cond: {
+                if: { $or: [{ $eq: ["$thumbnail", null] }, { $eq: ["$thumbnail", ""] }] },
+                then: { $ifNull: ["$videoMeta.thumbnail", null] },
+                else: "$thumbnail"
+              }
+            }
+          }
+        }
       ]);
     } catch (err) {
       throw err;
@@ -92,7 +208,50 @@ class QuestionService {
   async getVideoById(payload, user) {
     try {
       const { id } = payload;
-      return await Question.findOne({ _id: id, createdBy: user._id });
+      const video = await Question.findOne({ _id: id, createdBy: user._id }).lean();
+      if (!video) return null;
+
+      if (!video.title || !video.thumbnail) {
+        const Video = require("../models/video.model");
+        let videoMeta = await Video.findOne({ videoId: video.videoId });
+        
+        if (!videoMeta || !videoMeta.title || !videoMeta.thumbnail) {
+          try {
+            const ytdl = require("@distube/ytdl-core");
+            const info = await ytdl.getInfo(`https://www.youtube.com/watch?v=${video.videoId}`);
+            const metadata = {
+              videoId: video.videoId,
+              title: info.videoDetails.title,
+              description: info.videoDetails.description,
+              thumbnail: info.videoDetails.thumbnails[0].url,
+            };
+            
+            // Save to Video collection
+            videoMeta = await Video.findOneAndUpdate(
+              { videoId: video.videoId },
+              { $set: metadata },
+              { upsert: true, new: true }
+            );
+
+            // Save back to Question collection for performance in future
+            await Question.updateOne(
+              { _id: video._id },
+              { $set: { title: metadata.title, thumbnail: metadata.thumbnail } }
+            );
+            
+            video.title = metadata.title;
+            video.thumbnail = metadata.thumbnail;
+          } catch (ytdlErr) {
+            console.error("Failed to fetch metadata from ytdl in getVideoById:", ytdlErr.message);
+          }
+        }
+
+        if (videoMeta) {
+          video.title = video.title || videoMeta.title;
+          video.thumbnail = video.thumbnail || videoMeta.thumbnail;
+        }
+      }
+      return video;
     } catch (err) {
       throw err;
     }
@@ -129,21 +288,53 @@ class QuestionService {
         throw new Error("Either videoId or shareId is required");
       }
 
-      const video = await Question.findOne(query);
+      const video = await Question.findOne(query).lean();
       if (!video) {
         return null;
       }
 
-      return {
-        _id: video._id,
-        videoId: video.videoId,
-        videoUrl: video.videoUrl,
-        title: video.title,
-        thumbnail: video.thumbnail,
-        questions: video.questions,
-        createdAt: video.createdAt,
-        updatedAt: video.updatedAt,
-      };
+      if (!video.title || !video.thumbnail) {
+        const Video = require("../models/video.model");
+        let videoMeta = await Video.findOne({ videoId: video.videoId });
+        
+        if (!videoMeta || !videoMeta.title || !videoMeta.thumbnail) {
+          try {
+            const ytdl = require("@distube/ytdl-core");
+            const info = await ytdl.getInfo(`https://www.youtube.com/watch?v=${video.videoId}`);
+            const metadata = {
+              videoId: video.videoId,
+              title: info.videoDetails.title,
+              description: info.videoDetails.description,
+              thumbnail: info.videoDetails.thumbnails[0].url,
+            };
+            
+            // Save to Video collection
+            videoMeta = await Video.findOneAndUpdate(
+              { videoId: video.videoId },
+              { $set: metadata },
+              { upsert: true, new: true }
+            );
+
+            // Save back to Question collection
+            await Question.updateOne(
+              { _id: video._id },
+              { $set: { title: metadata.title, thumbnail: metadata.thumbnail } }
+            );
+            
+            video.title = metadata.title;
+            video.thumbnail = metadata.thumbnail;
+          } catch (ytdlErr) {
+            console.error("Failed to fetch metadata from ytdl in getPublicVideo:", ytdlErr.message);
+          }
+        }
+
+        if (videoMeta) {
+          video.title = video.title || videoMeta.title;
+          video.thumbnail = video.thumbnail || videoMeta.thumbnail;
+        }
+      }
+
+      return video;
     } catch (err) {
       throw err;
     }

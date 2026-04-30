@@ -36,8 +36,11 @@ exports.saveYouTubeVideo = async (req, res) => {
       };
     }
 
-    const videoDoc = new Video(metadata);
-    await videoDoc.save();
+    const videoDoc = await Video.findOneAndUpdate(
+      { videoId: metadata.videoId },
+      { $set: metadata },
+      { upsert: true, new: true }
+    );
     res.json({ status: true, data: videoDoc });
   } catch (e) {
     res.status(400).json({ status: false, message: e.message });
