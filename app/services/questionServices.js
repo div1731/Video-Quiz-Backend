@@ -10,7 +10,6 @@ class QuestionService {
       let videoDocument = await Question.findOne({ videoId, createdBy });
 
       if (!videoDocument) {
-        // If not found, create it. Try to get title/thumbnail from Video model if not in payload
         let finalTitle = title;
         let finalThumbnail = thumbnail;
 
@@ -32,12 +31,10 @@ class QuestionService {
           questions: questions || []
         });
       } else {
-        // If exists, update metadata if provided
         if (videoUrl) videoDocument.videoUrl = videoUrl;
         if (title) videoDocument.title = title;
         if (thumbnail) videoDocument.thumbnail = thumbnail;
         
-        // If title/thumbnail still missing, try to fill from Video model
         if (!videoDocument.title || !videoDocument.thumbnail) {
           const Video = require("../models/video.model");
           const videoMeta = await Video.findOne({ videoId });
@@ -226,14 +223,12 @@ class QuestionService {
               thumbnail: info.videoDetails.thumbnails[0].url,
             };
             
-            // Save to Video collection
             videoMeta = await Video.findOneAndUpdate(
               { videoId: video.videoId },
               { $set: metadata },
               { upsert: true, new: true }
             );
 
-            // Save back to Question collection for performance in future
             await Question.updateOne(
               { _id: video._id },
               { $set: { title: metadata.title, thumbnail: metadata.thumbnail } }
@@ -242,7 +237,6 @@ class QuestionService {
             video.title = metadata.title;
             video.thumbnail = metadata.thumbnail;
           } catch (ytdlErr) {
-            console.error("Failed to fetch metadata from ytdl in getVideoById:", ytdlErr.message);
           }
         }
 
@@ -308,14 +302,12 @@ class QuestionService {
               thumbnail: info.videoDetails.thumbnails[0].url,
             };
             
-            // Save to Video collection
             videoMeta = await Video.findOneAndUpdate(
               { videoId: video.videoId },
               { $set: metadata },
               { upsert: true, new: true }
             );
 
-            // Save back to Question collection
             await Question.updateOne(
               { _id: video._id },
               { $set: { title: metadata.title, thumbnail: metadata.thumbnail } }
@@ -324,7 +316,6 @@ class QuestionService {
             video.title = metadata.title;
             video.thumbnail = metadata.thumbnail;
           } catch (ytdlErr) {
-            console.error("Failed to fetch metadata from ytdl in getPublicVideo:", ytdlErr.message);
           }
         }
 

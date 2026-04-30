@@ -4,7 +4,6 @@ const inviteController = require('./invite.controller');
 const passport = require("passport");
 const PassportErrorHandler = require("../../middleware/passportErrorResponse");
 
-// Protect the route so only logged-in users can send invites
 router.post(
   '/send',
   [

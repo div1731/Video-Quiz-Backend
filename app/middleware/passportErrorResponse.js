@@ -6,7 +6,6 @@ class PassportErrorHandler {
   }
 
   error(err, req, res, next) {
-    // handle error
     createError(res, "Unauthorized Request", {}, 401);
   }
 }

@@ -7,7 +7,6 @@ const opts = {
   secretOrKey: EXPRESS_SECRET,
 };
 
-// Validate secretOrKey
 if (!opts.secretOrKey) {
   throw new Error("EXPRESS_SECRET is not defined. Please set it in your environment variables.");
 }
@@ -22,7 +21,6 @@ module.exports = (passport) => {
         }
         return done(null, user);
       } catch (e) {
-        console.error("Error in JwtStrategy:", e.message);
         return done(null, false);
       }
     })

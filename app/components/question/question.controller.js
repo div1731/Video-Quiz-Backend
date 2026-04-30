@@ -35,7 +35,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to add question. Please try again' });
       }
     } catch (e) {
-      console.error('Error in question controller:', e.message);
       createError(res, e);
     }
   }
@@ -50,7 +49,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to retrieve videos. Please try again' });
       }
     } catch (e) {
-      console.error('Error in getVideos:', e.message);
       createError(res, e);
     }
   }
@@ -65,7 +63,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to retrieve user videos. Please try again' });
       }
     } catch (e) {
-      console.error('Error in getAllUserVideos:', e.message);
       createError(res, e);
     }
   }
@@ -83,7 +80,6 @@ class QuestionController {
         createError(res, {}, { message: 'Video not found' });
       }
     } catch (e) {
-      console.error('Error in getVideoByUrl:', e.message);
       createError(res, e);
     }
   }
@@ -101,7 +97,6 @@ class QuestionController {
         createError(res, {}, { message: 'Video not found' });
       }
     } catch (e) {
-      console.error('Error in getVideoById:', e.message);
       createError(res, e);
     }
   }
@@ -119,7 +114,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to delete question. Please try again' });
       }
     } catch (e) {
-      console.error('Error in deleteQuestion:', e.message);
       createError(res, e);
     }
   }
@@ -140,7 +134,6 @@ class QuestionController {
         createError(res, {}, { message: 'Video not found' });
       }
     } catch (e) {
-      console.error('Error in getPublicVideo:', e.message);
       createError(res, e);
     }
   }
@@ -159,7 +152,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to generate share link. Please try again' });
       }
     } catch (e) {
-      console.error('Error in generateShareLink:', e.message);
       createError(res, e);
     }
   }
@@ -180,7 +172,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to save answer. Please try again.' });
       }
     } catch (e) {
-      console.error('Error in updateUserAnswer:', e.message);
       if (e.message && (e.message.includes('ValidationError') || e.message.includes('CastError') || e.message.includes('Invalid question ID format'))) {
         createError(res, {}, { message: 'Invalid data or ID format provided' });
       } else {
@@ -205,7 +196,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to remove question. Please try again.' });
       }
     } catch (e) {
-      console.error('Error in removeQuestion:', e.message);
       createError(res, e);
     }
   }
@@ -226,7 +216,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to clear questions. Please try again.' });
       }
     } catch (e) {
-      console.error('Error in clearQuestionsAtTime:', e.message);
       createError(res, e);
     }
   }
@@ -247,7 +236,6 @@ class QuestionController {
         createError(res, {}, { message: 'Failed to update question details' });
       }
     } catch (e) {
-      console.error('Error in updateQuestionDetails:', e.message);
       createError(res, e);
     }
   }
@@ -277,7 +265,6 @@ class QuestionController {
         createResponse(res, true, 'No video found with this ID', { videoId: query.videoId });
       }
     } catch (e) {
-      console.error('Error in debugVideoQuestions:', e.message);
       createError(res, e);
     }
   }

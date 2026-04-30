@@ -25,10 +25,9 @@ const userSchema = new mongoose.Schema(
       minlength: [6, "Password must be at least 6 characters"],
     },
   },
-  { timestamps: true } // UTC format, removed deprecated usePushEach
+  { timestamps: true }
 );
 
-// Hash password before saving
 userSchema.pre("save", function (next) {
   if (this.isModified("password")) {
     this.password = this._hashPassword(this.password);
@@ -37,7 +36,6 @@ userSchema.pre("save", function (next) {
   return next();
 });
 
-// Hash password for findOneAndUpdate
 userSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate();
   if (update.password) {

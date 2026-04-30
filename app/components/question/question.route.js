@@ -74,13 +74,11 @@ router.delete(
   }
 );
 
-// Public route - no authentication required
 router.get(
   "/public",
   (req, res) => questionController.getPublicVideo(req, res)
 );
 
-// Generate share link - requires authentication
 router.post(
   "/share",
   [

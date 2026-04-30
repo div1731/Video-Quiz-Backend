@@ -15,7 +15,7 @@ const schema = mongoose.Schema(
       ref: "User",
     },
     answer: {
-      type: Schema.Types.Mixed, // This allows both array and string/object
+      type: Schema.Types.Mixed,
       default: []
     },
     username: {
@@ -28,7 +28,7 @@ const schema = mongoose.Schema(
   {
     timestamps: true,
     usePushEach: true,
-    collection: 'useranswers' // Explicitly specify collection name
+    collection: 'useranswers'
   }
 );
 

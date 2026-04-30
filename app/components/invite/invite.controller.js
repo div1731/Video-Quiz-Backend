@@ -1,9 +1,6 @@
 const nodemailer = require('nodemailer');
 
-/**
- * Send an invitation email to a list of recipients
- * POST /api/invite/send
- */
+
 exports.sendInvites = async (req, res) => {
   try {
     const { emails, inviteLink } = req.body;
@@ -22,37 +19,31 @@ exports.sendInvites = async (req, res) => {
       });
     }
 
-    // Check if real SMTP credentials are provided in .env
     let transporter;
     
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-      // Use real SMTP (e.g., Gmail)
       transporter = nodemailer.createTransport({
-        service: 'gmail', // Assuming Gmail, or you can use host: process.env.SMTP_HOST
+        service: 'gmail',
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
       });
-      console.log('Using real SMTP credentials for email delivery.');
     } else {
-      // Fallback: For testing purposes, create a test account on Ethereal Email
-      console.log('No SMTP credentials found in .env. Falling back to Ethereal mock email.');
       const testAccount = await nodemailer.createTestAccount();
       transporter = nodemailer.createTransport({
         host: "smtp.ethereal.email",
         port: 587,
-        secure: false, // true for 465, false for other ports
+        secure: false,
         auth: {
-          user: testAccount.user, // generated ethereal user
-          pass: testAccount.pass, // generated ethereal password
+          user: testAccount.user,
+          pass: testAccount.pass,
         },
       });
     }
 
     const emailList = Array.isArray(emails) ? emails : emails.split(',').map(e => e.trim());
 
-    // Send mail with defined transport object
     const info = await transporter.sendMail({
       from: '"Video Quiz App" <noreply@videoquiz.com>',
       to: emailList.join(','),
@@ -72,8 +63,6 @@ exports.sendInvites = async (req, res) => {
       `,
     });
 
-    console.log("Message sent: %s", info.messageId);
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 
     return res.status(200).json({
       status: true,
@@ -84,7 +73,6 @@ exports.sendInvites = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error sending invites:', error);
     return res.status(500).json({
       status: false,
       message: 'Failed to send invitations. Please try again later.'

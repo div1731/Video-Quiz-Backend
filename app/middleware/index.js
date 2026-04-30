@@ -16,32 +16,24 @@ class Middleware {
     app.use(bodyParser.json({ limit: "20mb" }));
     app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
 
-    /**
-     * Session middleware
-     */
+    
     app.use(
       session({
-        secret: process.env.SESSION_SECRET || "default-secret", // Fallback secret
+        secret: process.env.SESSION_SECRET || "default-secret",
         resave: false,
         saveUninitialized: true,
-        cookie: { secure: process.env.NODE_ENV === "production" }, // Secure in production
+        cookie: { secure: process.env.NODE_ENV === "production" },
       })
     );
 
-    /**
-     * Passport middleware init
-     */
+    
     app.use(passport.initialize());
     app.use(passport.session());
 
-    /**
-     * Passport strategy
-     */
+    
     passportJwtUtils(passport);
 
-    /**
-     * Morgan logging
-     */
+    
     app.use(
       morgan(function (tokens, req, res) {
         return [

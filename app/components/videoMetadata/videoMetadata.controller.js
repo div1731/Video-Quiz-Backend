@@ -12,7 +12,6 @@ exports.saveYouTubeVideo = async (req, res) => {
     let metadata;
 
     if (title && description && thumbnail) {
-      console.log('Using provided metadata for video:', videoUrl);
       metadata = {
         videoId: req.body.videoId || videoUrl.split('v=')[1]?.split('&')[0] || videoUrl.split('/').pop(),
         title,
@@ -23,7 +22,6 @@ exports.saveYouTubeVideo = async (req, res) => {
         username: req.user.username,
       };
     } else {
-      console.log('Fetching metadata using ytdl for video:', videoUrl);
       const info = await ytdl.getInfo(videoUrl);
       metadata = {
         videoId: info.videoDetails.videoId,
@@ -80,7 +78,6 @@ exports.getVideoByIdAndMeta = async (req, res) => {
   try {
     const questionId = req.params.id;
 
-    // Find the question first
     const question = await Question.findById(questionId);
     if (!question) {
       return res.status(404).json({

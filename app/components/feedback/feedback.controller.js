@@ -4,7 +4,6 @@ const createFeedback = async (req, res) => {
   try {
     const { name, email, rating, message } = req.body;
     
-    // Create feedback with optional user ID if logged in
     const feedback = new Feedback({
       name,
       email,
@@ -21,7 +20,6 @@ const createFeedback = async (req, res) => {
       data: feedback,
     });
   } catch (error) {
-    console.error("CreateFeedback error:", error);
     return res.status(500).json({
       status: false,
       message: error.message || "An error occurred while submitting feedback.",

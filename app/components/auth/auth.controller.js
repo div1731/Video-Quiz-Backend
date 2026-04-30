@@ -21,17 +21,13 @@ class AuthController {
 
   async login(req, res) {
     try {
-      // console.log('Login attempt for:', req.body.email);
       const data = await authServices.UserLogin(req.body);
       if (data) {
-        // console.log('Login successful for:', req.body.email);
         createResponse(res, true, "Login success", data);
       } else {
-        // console.log('Login failed - no data returned for:', req.body.email);
         createError(res, {}, { message: "Invalid Credentials" });
       }
     } catch (err) {
-      console.error('Login error:', err);
       createError(res, {
         message: err.message || 'Login failed',
       });

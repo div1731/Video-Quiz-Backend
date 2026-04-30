@@ -1,8 +1,6 @@
 const path = require("path");
 const dotenv = require("dotenv");
-/**
- * Load environment variables from .env file
- */
+
 
 const envPostFix = process.env.APP_ENV ? `.${process.env.APP_ENV}` : "";
 dotenv.config({

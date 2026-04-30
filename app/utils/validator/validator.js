@@ -6,7 +6,6 @@ const isNumeric = require("validator/lib/isNumeric");
 const isIn = require("validator/lib/isIn");
 const isURL = require("validator/lib/isURL");
 const isAlphanumeric = require("validator/lib/isAlphanumeric");
-// Custom Validators
 const {
   isEmpty,
   isValidString,
@@ -30,7 +29,6 @@ module.exports = {
   isIn,
   isURL,
   isAlphanumeric,
-  // Custom Validations
   isEmpty,
   isValidString,
   customRegex,

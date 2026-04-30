@@ -1,9 +1,6 @@
 const isJSON = require("validator/lib/isJSON");
 
-/**
- * @description Check if id is valid mongodb id
- * @param {*} str
- */
+
 exports.isValidId = (id) => {
   if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
     return true;
@@ -12,10 +9,7 @@ exports.isValidId = (id) => {
   }
 };
 
-/**
- * @description Check if variable is undefined or not
- * @param {*} value
- */
+
 exports.isEmpty = (value) => {
   if (
     value === undefined ||
@@ -30,10 +24,7 @@ exports.isEmpty = (value) => {
   }
 };
 
-/**
- * @description Check if String and doesn't contain space and special chracters
- * @param {String} str
- */
+
 exports.isValidString = (str) => {
   var regExp = /^[a-zA-Z]+$/;
   if (typeof str !== "string") {
@@ -45,11 +36,7 @@ exports.isValidString = (str) => {
   }
 };
 
-/**
- * @description Custom RegEx
- * @param {String} str
- * @param {String} regEx
- */
+
 exports.customRegex = (str, regEx) => {
   if (typeof str !== "string") {
     return false;
@@ -60,10 +47,7 @@ exports.customRegex = (str, regEx) => {
   }
 };
 
-/**
- * @desc Checks for valid email
- * @param {String} value // Accepts string
- */
+
 exports.isEmail = (value) => {
   var email = value;
   var myRegEx =
@@ -76,10 +60,7 @@ exports.isEmail = (value) => {
   }
 };
 
-/**
- * @desc Checks for valid array
- * @param {*} value
- */
+
 exports.isArray = (value) => {
   if (typeof value === "string") {
     const replaced = value.replace(/'/g, '"');
@@ -102,28 +83,19 @@ exports.isArray = (value) => {
   }
 };
 
-/**
- * @description Is Valid Date
- * @param {String} d
- */
+
 exports.isValidDate = (d) => {
   var date = d ? new Date(d) : undefined;
   var myRegex = /Invalid|NaN/;
   return !myRegex.test(date);
 };
 
-/**
- * @description Check if valid string
- * @param {String} value
- */
+
 exports.isString = (value) => {
   return typeof value === "string" || value instanceof String;
 };
 
-/**
- * @desc Checks if given value is Decimal Number
- * @param {*} value // Accepts string
- */
+
 exports.isDecimalNumber = (value) => {
   var number = value;
   var myRegEx = /^\d+(\.\d+)?$/;
@@ -135,10 +107,7 @@ exports.isDecimalNumber = (value) => {
   }
 };
 
-/**
- * @desc Checks if given value is Number
- * @param {*} value // Accepts string
- */
+
 exports.isNumber = (value) => {
   var number = value;
   var myRegEx = /^(\s*[0-9]+\s*)+$/;
@@ -150,10 +119,7 @@ exports.isNumber = (value) => {
   }
 };
 
-/**
- * @desc Checks if given value is Boolean
- * @param {*} value // Accepts string
- */
+
 exports.isBoolean = (value) => {
   if (typeof value === "boolean") {
     return true;

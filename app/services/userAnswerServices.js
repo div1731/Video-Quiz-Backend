@@ -49,16 +49,9 @@ class AnswerService {
   }
   async saveUserResponse(payload, user) {
     try {
-      // console.log('=== SAVE USER RESPONSE START ===');
-      // console.log('Payload received:', JSON.stringify(payload, null, 2));
-      // console.log('User received:', { id: user._id, username: user.username, email: user.email });
       
       const { questionId, videoId, answer } = payload;
       
-      // Check database connection
-      console.log('MongoDB connection state:', mongoose.connection.readyState);
-      console.log('Database name:', mongoose.connection.db?.databaseName);
-      console.log('Model collection name:', Answer.collection.name);
       
       if (!questionId || !videoId || !answer) {
         const error = new Error('Missing required fields: questionId, videoId, and answer are required.');
@@ -73,15 +66,6 @@ class AnswerService {
       }
 
       const query = { userId: user._id, questionId, videoId };
-      console.log('Query to find existing record:', JSON.stringify(query, null, 2));
-      
-      // Check if record exists first
-      const existingRecord = await Answer.findOne(query);
-      console.log('Existing record found:', existingRecord ? 'YES' : 'NO');
-      if (existingRecord) {
-        console.log('Existing record details:', JSON.stringify(existingRecord, null, 2));
-      }
-      
       const update = {
         $set: {
           answer: answer,
@@ -90,43 +74,17 @@ class AnswerService {
           updatedAt: new Date()
         }
       };
-      console.log('Update object:', JSON.stringify(update, null, 2));
       
       const options = {
-        new: true,          // Return the modified document
-        upsert: true,       // Create a new document if one doesn't exist
+        new: true,
+        upsert: true,
         runValidators: true,
         setDefaultsOnInsert: true
       };
-      console.log('Options:', JSON.stringify(options, null, 2));
 
-      console.log('Executing findOneAndUpdate on collection:', Answer.collection.name);
       const result = await Answer.findOneAndUpdate(query, update, options);
-      
-      console.log('=== SAVE OPERATION COMPLETED ===');
-      console.log('Result from database:', JSON.stringify(result, null, 2));
-      console.log('Document ID:', result._id);
-      console.log('Saved to collection:', Answer.collection.name);
-      
-      // Verify the save by querying the database
-      console.log('=== VERIFICATION QUERY ===');
-      const verification = await Answer.findById(result._id);
-      console.log('Verification query result:', verification ? 'FOUND' : 'NOT FOUND');
-      if (verification) {
-        console.log('Verified document in collection:', Answer.collection.name);
-        console.log('Verified document:', JSON.stringify(verification, null, 2));
-      }
-      
-      // Count total documents in collection
-      const totalCount = await Answer.countDocuments();
-      console.log('Total documents in', Answer.collection.name, 'collection:', totalCount);
-      
-      console.log('=== SAVE USER RESPONSE END ===');
       return result;
     } catch (error) {
-      console.error('=== ERROR IN SAVE USER RESPONSE ===');
-      console.error('Error details:', error);
-      console.error('Error stack:', error.stack);
       throw error;
     }
   }

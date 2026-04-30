@@ -1,7 +1,6 @@
 const Answer = require("../../models/userAnswer.model");
 const { createError, createResponse } = require("../../utils/helpers/helpers");
 const userAnswerServices = require("../../services/userAnswerServices");
-// const Answer = require("../../models/userAnswer.model");
 
 class AnswerController {
   async answer(req, res) {
@@ -40,20 +39,17 @@ class AnswerController {
 
   async checkAnswer(req, res) {
     try {
-      const { id } = req.params; // This could be videoId or document _id
+      const { id } = req.params;
       const { user } = req;
       
       const Answer = require("../../models/userAnswer.model");
       
-      // First try to find by document _id
       let answer = await Answer.findOne({ _id: id, userId: user._id });
       
-      // If not found, try to find by videoId
       if (!answer) {
         answer = await Answer.findOne({ videoId: id, userId: user._id });
       }
       
-      // If still not found, try to find by questionId
       if (!answer) {
         answer = await Answer.findOne({ questionId: id, userId: user._id });
       }
@@ -64,7 +60,6 @@ class AnswerController {
         createError(res, {}, { message: "Answer not found" });
       }
     } catch (e) {
-      console.error("Error in checkAnswer:", e);
       createError(res, e);
     }
   }
@@ -72,16 +67,15 @@ class AnswerController {
   async getUserAnswers(req, res) {
     try {
       const { user } = req;
-      const { videoId } = req.query; // Optional filter by videoId
+      const { videoId } = req.query;
       
-      // Build query
       const query = { userId: user._id };
       if (videoId) {
         query.videoId = videoId;
       }
       
       const answers = await Answer.find(query)
-        .populate('questionId', 'title question') // Populate question details if needed
+        .populate('questionId', 'title question')
         .sort({ createdAt: -1 });
       
       createResponse(res, true, "User answers retrieved successfully", {
@@ -89,26 +83,22 @@ class AnswerController {
         answers: answers
       });
     } catch (e) {
-      console.error("Error in getUserAnswers:", e);
       createError(res, e);
     }
   }
 
-  // Additional helper method to delete an answer
   async deleteAnswer(req, res) {
     try {
-      const { id } = req.params; // This could be videoId or document _id
+      const { id } = req.params;
       const { user } = req;
       
       const Answer = require("../../models/userAnswer.model");
       
-      // First try to find by document _id
       let deletedAnswer = await Answer.findOneAndDelete({ 
         _id: id, 
         userId: user._id 
       });
       
-      // If not found, try to find by videoId
       if (!deletedAnswer) {
         deletedAnswer = await Answer.findOneAndDelete({ 
           videoId: id, 
@@ -126,12 +116,10 @@ class AnswerController {
         );
       }
     } catch (e) {
-      console.error("Error in deleteAnswer:", e);
       createError(res, e);
     }
   }
 
-  // New method to get answers by videoId
   async getAnswersByVideo(req, res) {
     try {
       const { videoId } = req.params;
@@ -149,7 +137,6 @@ class AnswerController {
         answers: answers
       });
     } catch (e) {
-      console.error("Error in getAnswersByVideo:", e);
       createError(res, e);
     }
   }
